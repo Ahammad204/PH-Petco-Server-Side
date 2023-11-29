@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 const jwt = require('jsonwebtoken');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 //Middleware
 app.use(cors({
@@ -164,12 +164,71 @@ async function run() {
 
         })
         //Get Pet Data
-        app.get('/pet', async (req, res) => {
+        app.get('/pet', verifyToken, verifyAdmin, async (req, res) => {
 
             const result = await petCollection.find().toArray();
             res.send(result)
 
         })
+        //Get Carts Data
+        app.get('/carts', async (req, res) => {
+
+            const email = req.query.email;
+            const query = { email: email };
+            const result = await cartCollection.find(query).toArray();
+            res.send(result);
+
+        })
+
+        //Delete a Pet 
+        app.delete('/pet/:id', async (req, res) => {
+
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await petCollection.deleteOne(query);
+            res.send(result);
+
+        })
+
+        //Update a pet
+        app.patch('/pet/:id', verifyToken, async (req, res) => {
+
+            const item = req.body;
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const updatedDoc = {
+
+                $set: {
+
+                    petName: item.petName,
+                    category: item.category,
+                    petAge: item.petAge,
+                    petLocation: item.petLocation,
+                    shortDescription: item.shortDescription,
+                    longDescription: item.longDescription,
+                    image: item.image,
+
+                }
+
+
+            }
+
+            const result = await petCollection.updateOne(filter, updatedDoc)
+            res.send(result)
+
+        })
+
+        //Get A Pet
+        app.get('/pet/:id', async (req, res) => {
+
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await petCollection.findOne(query)
+            res.send(result)
+
+        })
+
+
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
