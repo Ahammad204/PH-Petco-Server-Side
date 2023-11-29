@@ -163,25 +163,20 @@ async function run() {
             res.send(result)
 
         })
-        //Get Pet Data
-        app.get('/pet', verifyToken, verifyAdmin, async (req, res) => {
+        // Get Pet Data by Date in Descending Order
+        app.get('/pet', async (req, res) => {
+            try {
+                const result = await petCollection.find().sort({ date: -1 }).toArray();
+                res.send(result);
+            } catch (error) {
+                console.error(error);
+                res.status(500).send('Internal Server Error');
+            }
+        });
 
-            const result = await petCollection.find().toArray();
-            res.send(result)
-
-        })
-        //Get Carts Data
-        app.get('/carts', async (req, res) => {
-
-            const email = req.query.email;
-            const query = { email: email };
-            const result = await cartCollection.find(query).toArray();
-            res.send(result);
-
-        })
 
         //Delete a Pet 
-        app.delete('/pet/:id',verifyToken, async (req, res) => {
+        app.delete('/pet/:id', verifyToken, async (req, res) => {
 
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
@@ -219,7 +214,7 @@ async function run() {
         })
 
         //Get A Pet
-        app.get('/pet/:id',verifyToken, async (req, res) => {
+        app.get('/pet/:id', verifyToken, async (req, res) => {
 
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
@@ -227,8 +222,8 @@ async function run() {
             res.send(result)
 
         })
-        //Make an Admin
-        app.patch('/pet/user/:id', verifyToken,  async (req, res) => {
+        //Make Pet Adopted
+        app.patch('/pet/user/:id', verifyToken, async (req, res) => {
 
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
