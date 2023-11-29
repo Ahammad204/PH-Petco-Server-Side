@@ -55,6 +55,7 @@ async function run() {
         const categoryCollection = client.db('categoryDB').collection('category')
         const usersCollection = client.db('usersDB').collection('users')
         const petCollection = client.db('petsDB').collection('pets')
+        const adoptCollection = client.db('adoptDB').collection('adopts')
 
         //Own MiddleWare
         //Verify Token
@@ -237,6 +238,15 @@ async function run() {
 
             }
             const result = await petCollection.updateOne(filter, updatedDoc)
+            res.send(result)
+
+        })
+
+        //Post a Adopt data
+        app.post('/adopt', async (req, res) => {
+
+            const newAdopt = req.body;
+            const result = await adoptCollection.insertOne(newAdopt);
             res.send(result)
 
         })
