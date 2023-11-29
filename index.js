@@ -181,7 +181,7 @@ async function run() {
         })
 
         //Delete a Pet 
-        app.delete('/pet/:id', async (req, res) => {
+        app.delete('/pet/:id',verifyToken, async (req, res) => {
 
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
@@ -219,11 +219,29 @@ async function run() {
         })
 
         //Get A Pet
-        app.get('/pet/:id', async (req, res) => {
+        app.get('/pet/:id',verifyToken, async (req, res) => {
 
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const result = await petCollection.findOne(query)
+            res.send(result)
+
+        })
+        //Make an Admin
+        app.patch('/pet/user/:id', verifyToken,  async (req, res) => {
+
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updatedDoc = {
+
+                $set: {
+
+                    adopted: true
+
+                }
+
+            }
+            const result = await petCollection.updateOne(filter, updatedDoc)
             res.send(result)
 
         })
