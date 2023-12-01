@@ -56,6 +56,7 @@ async function run() {
         const usersCollection = client.db('usersDB').collection('users')
         const petCollection = client.db('petsDB').collection('pets')
         const adoptCollection = client.db('adoptDB').collection('adopts')
+        const donationCollection = client.db('donationDB').collection('donation')
 
         //Own MiddleWare
         //Verify Token
@@ -167,7 +168,8 @@ async function run() {
         // Get Pet Data by Date in Descending Order
         app.get('/pet', async (req, res) => {
             try {
-                const result = await petCollection.find().sort({ date: -1 }).toArray();
+                const userEmail = req.query.email;
+                const result = await petCollection.find({ email: userEmail }).sort({ date: -1 }).toArray();
                 res.send(result);
             } catch (error) {
                 console.error(error);
@@ -243,7 +245,7 @@ async function run() {
         })
 
         //Post a Adopt data
-        app.post('/adopt', async (req, res) => {
+        app.post('/adopt', verifyToken, async (req, res) => {
 
             const newAdopt = req.body;
             const result = await adoptCollection.insertOne(newAdopt);
@@ -251,7 +253,27 @@ async function run() {
 
         })
 
+        //Post donation Data
 
+        app.post('/donation', async (req, res) => {
+
+            const item = req.body;
+            const result = await donationCollection.insertOne(item);
+            res.send(result)
+
+        })
+
+        // Get donation Data by Date in Descending Order
+        app.get('/donation', async (req, res) => {
+            try {
+                const userEmail = req.query.email;
+                const result = await donationCollection.find({ email: userEmail }).sort({ date: -1 }).toArray();
+                res.send(result);
+            } catch (error) {
+                console.error(error);
+                res.status(500).send('Internal Server Error');
+            }
+        });
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
