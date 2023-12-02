@@ -4,6 +4,7 @@ const app = express();
 const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 //Middleware
 app.use(cors({
 
@@ -57,6 +58,7 @@ async function run() {
         const petCollection = client.db('petsDB').collection('pets')
         const adoptCollection = client.db('adoptDB').collection('adopts')
         const donationCollection = client.db('donationDB').collection('donation')
+        const paymentCollection = client.db('paymentDB').collection('payment')
 
         //Own MiddleWare
         //Verify Token
@@ -279,7 +281,7 @@ async function run() {
         app.get('/donation', async (req, res) => {
             try {
                 const userEmail = req.query.email;
-                const result = await donationCollection.find({ email: userEmail }).sort({ date: -1 }).toArray();
+                const result = await donationCollection.find({ ownerEmail: userEmail }).sort({ donationLastDate: -1 }).toArray();
                 res.send(result);
             } catch (error) {
                 console.error(error);
@@ -355,6 +357,69 @@ async function run() {
             res.send(result)
 
         })
+
+        // Get all Donation Data by Date in Descending Order
+        app.get('/donationCampaign', async (req, res) => {
+            try {
+
+                const result = await donationCollection.find().sort({ donationCreateDate: -1 }).toArray();
+                res.send(result);
+            } catch (error) {
+                console.error(error);
+                res.status(500).send('Internal Server Error');
+            }
+        });
+
+
+        //Post a Payment data
+        app.post('/payment', verifyToken, async (req, res) => {
+
+            const newPayment = req.body;
+            const result = await paymentCollection.insertOne(newPayment);
+
+            console.log(newPayment)
+            res.send(result)
+
+        })
+
+        // Payment Intend
+        app.post('/create-payment-intent', async (req, res) => {
+            try {
+                const { donation } = req.body;
+                const amount = parseInt(donation * 100);
+
+                console.log("Donation Amount:", donation);
+
+                const paymentIntent = await stripe.paymentIntents.create({
+                    amount: amount,
+                    currency: 'usd',
+                    payment_method_types: ['card'],
+                });
+
+                console.log("Payment Intent Client Secret:", paymentIntent.client_secret);
+
+                res.send({
+                    clientSecret: paymentIntent.client_secret,
+                });
+            } catch (error) {
+                console.error('Error creating payment intent:', error.message);
+                res.status(500).send({ error: 'Failed to create payment intent', message: error.message });
+            }
+        });
+
+        // Get my donation Data by Date in Descending Order
+        app.get('/myDonation', async (req, res) => {
+            try {
+                const userEmail = req.query.email;
+                const result = await paymentCollection.find({ donatorEmail: userEmail }).toArray();
+                res.send(result);
+            } catch (error) {
+                console.error(error);
+                res.status(500).send('Internal Server Error');
+            }
+        });
+
+
 
 
         // Send a ping to confirm a successful connection
