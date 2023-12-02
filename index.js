@@ -177,6 +177,18 @@ async function run() {
             }
         });
 
+        // Get all Pet Data by Date in Descending Order
+        app.get('/petListing', async (req, res) => {
+            try {
+
+                const result = await petCollection.find().sort({ date: -1 }).toArray();
+                res.send(result);
+            } catch (error) {
+                console.error(error);
+                res.status(500).send('Internal Server Error');
+            }
+        });
+
 
         //Delete a Pet 
         app.delete('/pet/:id', verifyToken, async (req, res) => {
@@ -217,7 +229,7 @@ async function run() {
         })
 
         //Get A Pet
-        app.get('/pet/:id', verifyToken, async (req, res) => {
+        app.get('/pet/:id', async (req, res) => {
 
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
@@ -274,6 +286,76 @@ async function run() {
                 res.status(500).send('Internal Server Error');
             }
         });
+
+        //Make Donation Paused
+        app.patch('/donation/user/:id', verifyToken, async (req, res) => {
+            try {
+                const id = req.params.id;
+                const filter = { _id: new ObjectId(id) };
+
+                // Fetch the current document to check the current status
+                const currentDoc = await donationCollection.findOne(filter);
+
+                if (!currentDoc) {
+                    return res.status(404).json({ message: "Donation not found" });
+                }
+
+                // Determine the new status based on the current status
+                const newStatus = currentDoc.status === "active" ? "paused" : "active";
+
+                const updatedDoc = {
+                    $set: {
+                        status: newStatus
+                    }
+                };
+
+                const result = await donationCollection.updateOne(filter, updatedDoc);
+
+                res.send(result)
+
+            } catch (error) {
+                console.error(error);
+                res.status(500).json({ message: "Internal Server Error" });
+            }
+        });
+
+        //Get A Donation
+        app.get('/donation/:id', async (req, res) => {
+
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await donationCollection.findOne(query)
+            res.send(result)
+
+        })
+
+        //Update a donation
+        app.patch('/donation/:id', verifyToken, async (req, res) => {
+
+            const item = req.body;
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const updatedDoc = {
+
+                $set: {
+
+                    petName: item.petName,
+                    maxDonationAmount: item.maxDonationAmount,
+                    shortDescription: item.shortDescription,
+                    longDescription: item.longDescription,
+                    donationLastDate: item.donationLastDate,
+                    image: item.image,
+
+                }
+
+
+            }
+
+            const result = await donationCollection.updateOne(filter, updatedDoc)
+            res.send(result)
+
+        })
+
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
