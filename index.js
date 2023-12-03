@@ -639,6 +639,19 @@ async function run() {
             }
         });
 
+        // Get User Data with specific fields
+        app.get('/usersInfo',  async (req, res) => {
+            try {
+                const result = await usersCollection.find({}, { projection: { _id: 1, email: 1, status: 1 } }).toArray();
+                res.send(result);
+            } catch (error) {
+                console.error(error);
+                res.status(500).send('Internal Server Error');
+            }
+        });
+
+
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
