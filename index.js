@@ -59,6 +59,7 @@ async function run() {
         const adoptCollection = client.db('adoptDB').collection('adopts')
         const donationCollection = client.db('donationDB').collection('donation')
         const paymentCollection = client.db('paymentDB').collection('payment')
+        const donatedCollection = client.db('donatedDB').collection('donated')
 
         //Own MiddleWare
         //Verify Token
@@ -419,6 +420,50 @@ async function run() {
             }
         });
 
+        //Post a Payment data
+        app.post('/donated', verifyToken, async (req, res) => {
+
+            const newDonated = req.body;
+            const result = await donatedCollection.insertOne(newDonated);
+
+            console.log(newDonated)
+            res.send(result)
+
+        })
+
+        // Get all Donated Data 
+        app.get('/donated', async (req, res) => {
+            try {
+
+                const result = await donatedCollection.find().toArray();
+                res.send(result);
+            } catch (error) {
+                console.error(error);
+                res.status(500).send('Internal Server Error');
+            }
+        });
+
+        //Update a donation
+        app.patch('/donated/:id', verifyToken, async (req, res) => {
+
+            const item = req.body;
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const updatedDoc = {
+
+                $set: {
+
+                    donatedAmount: item.donatedAmount
+
+                }
+
+
+            }
+
+            const result = await donatedCollection.updateOne(filter, updatedDoc)
+            res.send(result)
+
+        })
 
 
 
