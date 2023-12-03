@@ -242,20 +242,67 @@ async function run() {
         })
         //Make Pet Adopted
         app.patch('/pet/user/:id', verifyToken, async (req, res) => {
+            try {
+                const id = req.params.id;
+                const filter = { _id: new ObjectId(id) };
 
-            const id = req.params.id;
-            const filter = { _id: new ObjectId(id) };
-            const updatedDoc = {
+                // Fetch the current document to check the current status
+                const currentDoc = await petCollection.findOne(filter);
 
-                $set: {
-
-                    adopted: true
-
+                if (!currentDoc) {
+                    return res.status(404).json({ message: "User not found" });
                 }
 
+                // Determine the new status based on the current status
+                const newStatus = currentDoc.adopted === false ? true : false;
+
+                const updatedDoc = {
+                    $set: {
+                        adopted: newStatus
+                    }
+                };
+
+                const result = await petCollection.updateOne(filter, updatedDoc);
+
+                res.send(result)
+
+            } catch (error) {
+                console.error(error);
+                res.status(500).json({ message: "Internal Server Error" });
             }
-            const result = await petCollection.updateOne(filter, updatedDoc)
-            res.send(result)
+
+        })
+
+        //Make Pet Adopted
+        app.patch('/pet/admin/:id', verifyToken, verifyAdmin, async (req, res) => {
+            try {
+                const id = req.params.id;
+                const filter = { _id: new ObjectId(id) };
+
+                // Fetch the current document to check the current status
+                const currentDoc = await petCollection.findOne(filter);
+
+                if (!currentDoc) {
+                    return res.status(404).json({ message: "User not found" });
+                }
+
+                // Determine the new status based on the current status
+                const newStatus = currentDoc.adopted === false ? true : false;
+
+                const updatedDoc = {
+                    $set: {
+                        adopted: newStatus
+                    }
+                };
+
+                const result = await petCollection.updateOne(filter, updatedDoc);
+
+                res.send(result)
+
+            } catch (error) {
+                console.error(error);
+                res.status(500).json({ message: "Internal Server Error" });
+            }
 
         })
 
@@ -640,7 +687,7 @@ async function run() {
         });
 
         // Get User Data with specific fields
-        app.get('/usersInfo',  async (req, res) => {
+        app.get('/usersInfo', async (req, res) => {
             try {
                 const result = await usersCollection.find({}, { projection: { _id: 1, email: 1, status: 1 } }).toArray();
                 res.send(result);
@@ -650,7 +697,39 @@ async function run() {
             }
         });
 
+        // Get User Data 
+        app.get('/allPets', verifyToken, verifyAdmin, async (req, res) => {
+            try {
+                // const userEmail = req.query.email;
+                const result = await petCollection.find().toArray();
+                res.send(result);
+            } catch (error) {
+                console.error(error);
+                res.status(500).send('Internal Server Error');
+            }
+        });
 
+        // Get Donation Data 
+        app.get('/allDonation', verifyToken, verifyAdmin, async (req, res) => {
+            try {
+                // const userEmail = req.query.email;
+                const result = await donationCollection.find().toArray();
+                res.send(result);
+            } catch (error) {
+                console.error(error);
+                res.status(500).send('Internal Server Error');
+            }
+        });
+
+         //Delete a Donation
+         app.delete('/donations/:id', verifyToken, async (req, res) => {
+
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await donationCollection.deleteOne(query);
+            res.send(result);
+
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
