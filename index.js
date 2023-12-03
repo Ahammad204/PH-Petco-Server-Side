@@ -465,6 +465,28 @@ async function run() {
 
         })
 
+        //Update a donationParcentage
+        app.patch('/donation/parcentage/:id', verifyToken, async (req, res) => {
+
+            const item = req.body;
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const updatedDoc = {
+
+                $set: {
+
+                    donatedParcentage:item.donatedParcentage
+
+                }
+
+
+            }
+
+            const result = await donationCollection.updateOne(filter, updatedDoc)
+            res.send(result)
+
+        })
+
 
 
         // Send a ping to confirm a successful connection
