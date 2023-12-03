@@ -499,6 +499,146 @@ async function run() {
             }
         });
 
+        //Make Adoption Accept
+        app.patch('/adopt/accept/:id', verifyToken, async (req, res) => {
+            try {
+                const id = req.params.id;
+                const filter = { _id: new ObjectId(id) };
+
+                // Fetch the current document to check the current status
+                const currentDoc = await adoptCollection.findOne(filter);
+
+                if (!currentDoc) {
+                    return res.status(404).json({ message: "Adopt not found" });
+                }
+
+                // Determine the new status based on the current status
+                const newStatus = "accept"
+
+                const updatedDoc = {
+                    $set: {
+                        status: newStatus
+                    }
+                };
+
+                const result = await adoptCollection.updateOne(filter, updatedDoc);
+
+                res.send(result)
+
+            } catch (error) {
+                console.error(error);
+                res.status(500).json({ message: "Internal Server Error" });
+            }
+        });
+
+        //Make Adoption Reject
+        app.patch('/adopt/reject/:id', verifyToken, async (req, res) => {
+            try {
+                const id = req.params.id;
+                const filter = { _id: new ObjectId(id) };
+
+                // Fetch the current document to check the current status
+                const currentDoc = await adoptCollection.findOne(filter);
+
+                if (!currentDoc) {
+                    return res.status(404).json({ message: "Adopt not found" });
+                }
+
+                // Determine the new status based on the current status
+                const newStatus = "reject"
+
+                const updatedDoc = {
+                    $set: {
+                        status: newStatus
+                    }
+                };
+
+                const result = await adoptCollection.updateOne(filter, updatedDoc);
+
+                res.send(result)
+
+            } catch (error) {
+                console.error(error);
+                res.status(500).json({ message: "Internal Server Error" });
+            }
+        });
+
+        // Get User Data 
+        app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
+            try {
+                // const userEmail = req.query.email;
+                const result = await usersCollection.find().toArray();
+                res.send(result);
+            } catch (error) {
+                console.error(error);
+                res.status(500).send('Internal Server Error');
+            }
+        });
+
+        //Make Admin
+        app.patch('/users/admin/:id', verifyToken, verifyAdmin, async (req, res) => {
+            try {
+                const id = req.params.id;
+                const filter = { _id: new ObjectId(id) };
+
+                // Fetch the current document to check the current status
+                const currentDoc = await usersCollection.findOne(filter);
+
+                if (!currentDoc) {
+                    return res.status(404).json({ message: "User not found" });
+                }
+
+                // Determine the new status based on the current status
+                const newRole = currentDoc.role === "user" ? "admin" : "user";
+
+                const updatedDoc = {
+                    $set: {
+                        role: newRole
+                    }
+                };
+
+                const result = await usersCollection.updateOne(filter, updatedDoc);
+
+                res.send(result)
+
+            } catch (error) {
+                console.error(error);
+                res.status(500).json({ message: "Internal Server Error" });
+            }
+        });
+
+        //User Ban
+        app.patch('/users/ban/:id', verifyToken, verifyAdmin, async (req, res) => {
+            try {
+                const id = req.params.id;
+                const filter = { _id: new ObjectId(id) };
+
+                // Fetch the current document to check the current status
+                const currentDoc = await usersCollection.findOne(filter);
+
+                if (!currentDoc) {
+                    return res.status(404).json({ message: "User not found" });
+                }
+
+                // Determine the new status based on the current status
+                const newStatus = currentDoc.status === "active" ? "banned" : "active";
+
+                const updatedDoc = {
+                    $set: {
+                        status: newStatus
+                    }
+                };
+
+                const result = await usersCollection.updateOne(filter, updatedDoc);
+
+                res.send(result)
+
+            } catch (error) {
+                console.error(error);
+                res.status(500).json({ message: "Internal Server Error" });
+            }
+        });
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
