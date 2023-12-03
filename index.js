@@ -475,7 +475,7 @@ async function run() {
 
                 $set: {
 
-                    donatedParcentage:item.donatedParcentage
+                    donatedParcentage: item.donatedParcentage
 
                 }
 
@@ -487,7 +487,17 @@ async function run() {
 
         })
 
-
+        // Get Adopt Data by Date
+        app.get('/adopt', async (req, res) => {
+            try {
+                const userEmail = req.query.email;
+                const result = await adoptCollection.find({ ownerEmail: userEmail }).toArray();
+                res.send(result);
+            } catch (error) {
+                console.error(error);
+                res.status(500).send('Internal Server Error');
+            }
+        });
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
