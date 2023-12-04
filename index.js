@@ -168,6 +168,20 @@ async function run() {
             res.send(result)
 
         })
+        
+        // Get Pet Data by Name in Ascending Order
+        app.get('/petAl', async (req, res) => {
+            try {
+                const userEmail = req.query.email;
+                const result = await petCollection.find({ email: userEmail }).sort({ petName: 1 }).toArray();
+                res.send(result);
+            } catch (error) {
+                console.error(error);
+                res.status(500).send('Internal Server Error');
+            }
+        });
+
+
         // Get Pet Data by Date in Descending Order
         app.get('/pet', async (req, res) => {
             try {
@@ -307,7 +321,7 @@ async function run() {
         })
 
         //Post a Adopt data
-        app.post('/adopt', verifyToken, async (req, res) => {
+        app.post('/adopt', async (req, res) => {
 
             const newAdopt = req.body;
             const result = await adoptCollection.insertOne(newAdopt);
@@ -721,8 +735,8 @@ async function run() {
             }
         });
 
-         //Delete a Donation
-         app.delete('/donations/:id', verifyToken, async (req, res) => {
+        //Delete a Donation
+        app.delete('/donations/:id', verifyToken, async (req, res) => {
 
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
@@ -730,6 +744,62 @@ async function run() {
             res.send(result);
 
         })
+
+        //Update a donation
+        app.patch('/donatedAmount/:id', verifyToken, async (req, res) => {
+
+            const item = req.body;
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const updatedDoc = {
+
+                $set: {
+
+                    donatedAmount: item.donatedAmount
+
+                }
+
+
+            }
+
+            const result = await donationCollection.updateOne(filter, updatedDoc)
+            res.send(result)
+
+        })
+
+        // Get my donation Data by Date in Descending Order
+        app.get('/donator', async (req, res) => {
+            try {
+                const userEmail = req.query.email;
+                const result = await paymentCollection.find({ ownerEmail: userEmail }).toArray();
+                res.send(result);
+            } catch (error) {
+                console.error(error);
+                res.status(500).send('Internal Server Error');
+            }
+        });
+
+        //Delete a Donation
+        app.delete('/payments/:id', verifyToken, async (req, res) => {
+
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await paymentCollection.deleteOne(query);
+            res.send(result);
+
+        })
+
+        //Get A Donation
+        app.get('/payments', async (req, res) => {
+            try {
+
+                const result = await paymentCollection.find().toArray();
+                res.send(result);
+            } catch (error) {
+                console.error(error);
+                res.status(500).send('Internal Server Error');
+            }
+        });
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
