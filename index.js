@@ -10,7 +10,7 @@ app.use(cors({
 
     origin: [
 
-        'http://localhost:5173'
+        'https://phpetco20.web.app'
 
     ],
     credentials: true
@@ -168,7 +168,7 @@ async function run() {
             res.send(result)
 
         })
-        
+
         // Get Pet Data by Name in Ascending Order
         app.get('/petAl', async (req, res) => {
             try {
@@ -798,6 +798,70 @@ async function run() {
             } catch (error) {
                 console.error(error);
                 res.status(500).send('Internal Server Error');
+            }
+        });
+
+        //Make Adoption Accept
+        app.patch('/pet/accept/:id', verifyToken, async (req, res) => {
+            try {
+                const id = req.params.id;
+                const filter = { _id: new ObjectId(id) };
+
+                // Fetch the current document to check the current status
+                const currentDoc = await petCollection.findOne(filter);
+
+                if (!currentDoc) {
+                    return res.status(404).json({ message: "Adopt not found" });
+                }
+
+                // Determine the new status based on the current status
+                // const newStatus = true
+
+                const updatedDoc = {
+                    $set: {
+                        adopted: true
+                    }
+                };
+
+                const result = await petCollection.updateOne(filter, updatedDoc);
+
+                res.send(result)
+
+            } catch (error) {
+                console.error(error);
+                res.status(500).json({ message: "Internal Server Error" });
+            }
+        });
+
+        //Make Adoption Reject
+        app.patch('/pet/reject/:id', verifyToken, async (req, res) => {
+            try {
+                const id = req.params.id;
+                const filter = { _id: new ObjectId(id) };
+
+                // Fetch the current document to check the current status
+                const currentDoc = await petCollection.findOne(filter);
+
+                if (!currentDoc) {
+                    return res.status(404).json({ message: "Adopt not found" });
+                }
+
+                // Determine the new status based on the current status
+                // const newStatus = true
+
+                const updatedDoc = {
+                    $set: {
+                        adopted: false
+                    }
+                };
+
+                const result = await petCollection.updateOne(filter, updatedDoc);
+
+                res.send(result)
+
+            } catch (error) {
+                console.error(error);
+                res.status(500).json({ message: "Internal Server Error" });
             }
         });
 
